@@ -39,14 +39,28 @@ function makeResponsive() {
 
     function xScale(stateData, chosenX) {
         // create scales
-        var xScale = d3.scaleLinear()
+        var xLinear = d3.scaleLinear()
           .domain([d3.min(stateData, d => d[chosenX]) * 0.8,
             d3.max(stateData, d => d[chosenX]) * 1.2
           ])
           .range([0, width]);
       
-        return xScale;
+        return xLinear;
       }
+
+    // Set initial y-axis
+    var chosenY = "healthcare";
+
+    function yScale(stateData, chosenY) {
+        // create scales
+        var yLinear = d3.scaleLinear()
+            .domain([d3.min(stateData, d => d[chosenY]) * 0.8,
+                d3.max(stateData, d => d[chosenY]) * 1.2
+            ])
+            .range([height, 0]);
+
+        return yLinear;
+    }
 
     // Function to update x-axis var upon click on axis label
     function renderAxes(newXScale, xAxis) {
@@ -86,7 +100,62 @@ function makeResponsive() {
             data.smokes = +data.smokes;
         });
 
-        // Set linear scale for csv data using function above
+        // Set linear scale for csv data using x/yScale functions
+        var xLinear = xScale(stateData, chosenX);
+
+        var yLinear = yScale(stateData, chosenY);
+
+        // Create initial axes
+        var bottomAxis = d3.axisBottom(xLinear);
+        var leftAxis = d3.axisLeft(yLinear);
+
+        // append x axis
+        var xAxis = chartGroup.append("g")
+        .classed("x-axis", true)
+        .attr("transform", `translate(0, ${height})`)
+        .call(bottomAxis);
+
+        // append y axis
+        chartGroup.append("g")
+        .call(leftAxis);
+
+        // append initial circles
+        var circlesGroup = chartGroup.selectAll("circle")
+        .data(stateData)
+        .enter()
+        .append("circle")
+        .attr("cx", d => xLinearScale(d[chosenXAxis]))
+        .attr("cy", d => yLinearScale(d.healthcare))
+        .attr("r", 100)
+        .attr("fill", "lightblue")
+        .attr("opacity", ".5")
+        .text(data.abbr);
+
+        // Create group for  2 x- axis labels
+        var labelsGroup = chartGroup.append("g")
+        .attr("transform", `translate(${width / 2}, ${height + 20})`);
+
+        var povertyLabel = labelsGroup.append("text")
+        .attr("x", 0)
+        .attr("y", 20)
+        .attr("value", "poverty") // value to grab for event listener
+        .classed("active", true)
+        .text("In Poverty (%)");
+
+        var ageLabel = labelsGroup.append("text")
+        .attr("x", 0)
+        .attr("y", 40)
+        .attr("value", "age") // value to grab for event listener
+        .classed("inactive", true)
+        .text("Age (Median)");
+
+        var incomeLabel = labelsGroup.append("text")
+        .attr("x", 0)
+        .attr("y", 40)
+        .attr("value", "income") // value to grab for event listener
+        .classed("inactive", true)
+        .text("Household Income (Median)");
+
         
     });
 }
