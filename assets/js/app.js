@@ -24,7 +24,7 @@ function makeResponsive() {
     var width = svgWidth - margin.left - margin.right;
 
     // Append new svg element
-    var svg = d3
+    var svg = d3.select(".col-xs-12")
         .select("#scatter")
         .append("svg")
         .attr("height", svgHeight)
@@ -36,6 +36,7 @@ function makeResponsive() {
 
     // Set initial x-axis
     var chosenX = "poverty";
+    console.log(chosenX);
 
     function xScale(stateData, chosenX) {
         // create scales
@@ -124,37 +125,65 @@ function makeResponsive() {
         .data(stateData)
         .enter()
         .append("circle")
-        .attr("cx", d => xLinearScale(d[chosenXAxis]))
-        .attr("cy", d => yLinearScale(d.healthcare))
+        .attr("cx", d => xLinearScale(d[chosenX]))
+        .attr("cy", d => yLinearScale(d[chosenY]))
         .attr("r", 100)
         .attr("fill", "lightblue")
         .attr("opacity", ".5")
         .text(data.abbr);
 
         // Create group for  2 x- axis labels
-        var labelsGroup = chartGroup.append("g")
-        .attr("transform", `translate(${width / 2}, ${height + 20})`);
+        var xLabelsGroup = chartGroup.append("g")
+            .attr("transform", `translate(${width / 2}, ${height + 20})`);
 
-        var povertyLabel = labelsGroup.append("text")
-        .attr("x", 0)
-        .attr("y", 20)
-        .attr("value", "poverty") // value to grab for event listener
-        .classed("active", true)
-        .text("In Poverty (%)");
+        var povertyLabel = xLabelsGroup.append("text")
+            .attr("x", 0)
+            .attr("y", 20)
+            .attr("value", "poverty") // value to grab for event listener
+            .classed("active", true)
+            .text("In Poverty (%)");
 
-        var ageLabel = labelsGroup.append("text")
-        .attr("x", 0)
-        .attr("y", 40)
-        .attr("value", "age") // value to grab for event listener
-        .classed("inactive", true)
-        .text("Age (Median)");
+        var ageLabel = xLabelsGroup.append("text")
+            .attr("x", 0)
+            .attr("y", 40)
+            .attr("value", "age") // value to grab for event listener
+            .classed("inactive", true)
+            .text("Age (Median)");
 
-        var incomeLabel = labelsGroup.append("text")
-        .attr("x", 0)
-        .attr("y", 40)
-        .attr("value", "income") // value to grab for event listener
-        .classed("inactive", true)
-        .text("Household Income (Median)");
+        var incomeLabel = xLabelsGroup.append("text")
+            .attr("x", 0)
+            .attr("y", 60)
+            .attr("value", "income") // value to grab for event listener
+            .classed("inactive", true)
+            .text("Household Income (Median)");
+
+        // append y axis
+        var yLabelsGroup = chartGroup.append("text")
+            .attr("transform", "rotate(-90)")
+        
+        var healthcareLabel = yLabelsGroup.append("text")
+            .attr("y", 0 - margin.left)
+            .attr("x", 0 - (height / 2))
+            .attr("dy", "1em")
+            .attr("value", "healthcare")
+            .classed("active", true)
+            .text("Lacks Healthcare (%)");
+
+        var smokeLabel = yLabelsGroup.append("text")
+            .attr("y", 0 - margin.left)
+            .attr("x", -20 - (height / 2))
+            .attr("dy", "1em")
+            .attr("value", "smokers")
+            .classed("inactive", true)
+            .text("Smokes (%)");
+
+        var obeseLabel = yLabelsGroup.append("text")
+            .attr("y", 0 - margin.left)
+            .attr("x", -40 - (height / 2))
+            .attr("dy", "1em")
+            .attr("value", "obese")
+            .classed("inactive", true)
+            .text("Obese (%)");
 
         
     });
