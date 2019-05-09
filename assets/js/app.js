@@ -96,7 +96,45 @@
     }
 
     // function used for updating circles group with new tooltip
-    //ADD LATER
+    function updateToolTip(chosenX, chosenY, circlesGroup) {
+
+        if (chosenX === "poverty") {
+          var xLabel = "Poverty:";
+        }
+        else if (chosenX === "age") {
+            var xLabel = "Age:";
+        }
+        else {
+          var xLabel = "Income:";
+        }
+
+        if (chosenY === "healthcare") {
+            var yLabel = "Lacks Healthcare";
+        }
+        else if (chosenY === "obesity") {
+            var yLabel = "Obesity";
+        }
+        else {
+            var yLabel = "Smokes"
+        }
+      
+        var toolTip = d3.tip()
+          .attr("class", "tooltip")
+          .offset([80, -60])
+          .html(function(d) {
+            return (`${d.state}<hr>${xLabel} ${d[chosenX]}<br>${yLabel} ${d[chosenY]}`);
+          });
+      
+        circlesGroup.call(toolTip);
+      
+        circlesGroup.on("mouseover", function(data) {
+          toolTip.show(data);
+        })
+          // onmouseout event
+          .on("mouseout", function(data, index) {
+            toolTip.hide(data);
+          });
+    }      
 
     // Read CSV
     d3.csv("/data/data.csv")
@@ -141,6 +179,13 @@
             .attr("cy", d => yLinear(d[chosenY]))
             .attr("r", 10)
             .attr("fill", "lightblue")
+
+        //chartGroup.selectAll("text")
+        //    .data(stateData)
+        //    .enter()
+        //    .append("text")
+        //    .text(d => d[abbr])
+
             //.append("text")
             //.text(d => d.abbr);
 
@@ -220,6 +265,9 @@
                     // Update circles with new x axis
                     circlesGroup = renderCircles(circlesGroup, xLinear, chosenX, yLinear, chosenY);
 
+                    // updates tooltips with new info
+                    circlesGroup = updateToolTip(chosenX, chosenY, circlesGroup);
+
                     //Change classes to highlight selection in bold
                     if (chosenX === "age") {
                         ageLabel
@@ -276,6 +324,9 @@
 
                     // Update circles with new x axis
                     circlesGroup = renderCircles(circlesGroup, xLinear, chosenX, yLinear, chosenY);
+
+                    // updates tooltips with new info
+                    circlesGroup = updateToolTip(chosenX, chosenY, circlesGroup);
 
                     //Change classes to highlight selection in bold
                     if (chosenY === "smokes") {
