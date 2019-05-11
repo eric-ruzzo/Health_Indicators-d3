@@ -1,13 +1,13 @@
 // Wrap entire plot in a function to make it responsive
-//function makeResponsive() {
+function makeResponsive() {
 
-    // Select existing svg
-    //var svgArea = d3.select("body").select("svg");
+    //Select existing svg
+    var svgArea = d3.select("body").select("svg");
 
     // Clear svg if it is not empty
-    //if (!svgArea.empty()) {
-    //    svgArea.remove();
-    //}
+    if (!svgArea.empty()) {
+        svgArea.remove();
+    }
 
     // Set dimensions based on size of browser window
     var svgHeight = window.innerHeight;
@@ -86,11 +86,16 @@
 
     // function used for updating circles group with a transition to
     // new circles
-    function renderCircles(circlesGroup, newXScale, chosenX, newYScale, chosenY) {
+    function renderCircles(circlesGroup, textLabels, newXScale, chosenX, newYScale, chosenY) {
         circlesGroup.transition()
-        .duration(1000)
-        .attr("cx", d => newXScale(d[chosenX]))
-        .attr("cy", d => newYScale(d[chosenY]));
+            .duration(1000)
+            .attr("cx", d => newXScale(d[chosenX]))
+            .attr("cy", d => newYScale(d[chosenY]));
+
+        textLabels.transition()
+            .duration(1000)
+            .attr("x", d => newXScale(d[chosenX]))
+            .attr("y", d => newYScale(d[chosenY]) + 2);
     
         return circlesGroup;
     }
@@ -99,41 +104,43 @@
     function updateToolTip(chosenX, chosenY, circlesGroup) {
 
         if (chosenX === "poverty") {
-          var xLabel = "Poverty:";
+            var xLabel = "In Poverty:";
         }
         else if (chosenX === "age") {
-            var xLabel = "Age:";
+            var xLabel = "Median Age:";
         }
         else {
-          var xLabel = "Income:";
+            var xLabel = "Median Income:";
         }
 
         if (chosenY === "healthcare") {
-            var yLabel = "Lacks Healthcare";
+            var yLabel = "Lacks Healthcare:";
         }
         else if (chosenY === "obesity") {
-            var yLabel = "Obesity";
+            var yLabel = "Obesity:";
         }
         else {
-            var yLabel = "Smokes"
+            var yLabel = "Smokes:"
         }
       
         var toolTip = d3.tip()
-          .attr("class", "tooltip")
+          .attr("class", "d3-tip")
           .offset([80, -60])
           .html(function(d) {
-            return (`${d.state}<hr>${xLabel} ${d[chosenX]}<br>${yLabel} ${d[chosenY]}`);
+            return (`${d.state}<br>${xLabel} ${d[chosenX]}<br>${yLabel} ${d[chosenY]}`);
           });
       
         circlesGroup.call(toolTip);
       
         circlesGroup.on("mouseover", function(data) {
-          toolTip.show(data);
+          toolTip.show(data, this);
         })
           // onmouseout event
           .on("mouseout", function(data, index) {
             toolTip.hide(data);
           });
+
+        return circlesGroup;
     }      
 
     // Read CSV
@@ -175,22 +182,24 @@
             .data(stateData)
             .enter()
             .append("circle")
+            .attr("class", "stateCircle")
             .attr("cx", d => xLinear(d[chosenX]))
             .attr("cy", d => yLinear(d[chosenY]))
-            .attr("r", 10)
-            .attr("fill", "lightblue")
+            .attr("r", 10);
 
-        //chartGroup.selectAll("text")
-        //    .data(stateData)
-        //    .enter()
-        //    .append("text")
-        //    .text(d => d[abbr])
-
-            //.append("text")
-            //.text(d => d.abbr);
-
-        //var text = circlesGroup.append("text").selectAll("text")
-        //    .text(d => yLinear(d[abbr]));
+        // Add text to circles
+        var circlesText = chartGroup.selectAll(".stateText")
+            .data(stateData)
+            .enter()
+            .append("text");
+            
+        // Set text value for each circle
+        var textLabels = circlesText
+            .attr("class", "stateText")
+            .attr("x", d => xLinear(d[chosenX]))
+            .attr("y", d => yLinear(d[chosenY]) + 2)
+            .text((d, i) => d.abbr)
+            .attr("font-size", "10px");
 
         // Create group for 3 x- axis labels
         var xLabelsGroup = chartGroup.append("g")
@@ -245,6 +254,9 @@
             .classed("inactive", true)
             .text("Obese (%)");
 
+        // Add tooltips
+        circlesGroup = updateToolTip(chosenX, chosenY, circlesGroup);
+
         // Event listener for x labels    
         xLabelsGroup.selectAll("text")
             .on("click", function() {
@@ -263,7 +275,7 @@
                     xAxis = renderX(xLinear, xAxis);
 
                     // Update circles with new x axis
-                    circlesGroup = renderCircles(circlesGroup, xLinear, chosenX, yLinear, chosenY);
+                    circlesGroup = renderCircles(circlesGroup, textLabels, xLinear, chosenX, yLinear, chosenY);
 
                     // updates tooltips with new info
                     circlesGroup = updateToolTip(chosenX, chosenY, circlesGroup);
@@ -323,7 +335,7 @@
                     yAxis = renderY(yLinear, yAxis);
 
                     // Update circles with new x axis
-                    circlesGroup = renderCircles(circlesGroup, xLinear, chosenX, yLinear, chosenY);
+                    circlesGroup = renderCircles(circlesGroup, textLabels, xLinear, chosenX, yLinear, chosenY);
 
                     // updates tooltips with new info
                     circlesGroup = updateToolTip(chosenX, chosenY, circlesGroup);
@@ -365,4 +377,8 @@
                 }
             })
     });
-//}
+}
+
+makeResponsive();
+
+d3.select(window).on("resize", makeResponsive);
