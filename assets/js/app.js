@@ -95,13 +95,13 @@ function makeResponsive() {
         textLabels.transition()
             .duration(1000)
             .attr("x", d => newXScale(d[chosenX]))
-            .attr("y", d => newYScale(d[chosenY]) + 2);
+            .attr("y", d => newYScale(d[chosenY]) + 3);
     
         return circlesGroup;
     }
 
     // function used for updating circles group with new tooltip
-    function updateToolTip(chosenX, chosenY, circlesGroup) {
+    function updateToolTip(chosenX, chosenY, circlesGroup, textLabels) {
 
         if (chosenX === "poverty") {
             var xLabel = "In Poverty:";
@@ -127,16 +127,40 @@ function makeResponsive() {
           .attr("class", "d3-tip")
           .offset([80, -60])
           .html(function(d) {
-            return (`${d.state}<br>${xLabel} ${d[chosenX]}<br>${yLabel} ${d[chosenY]}`);
+              if (chosenX === "age" || chosenX === "income") {
+                return (`${d.state}<br>${xLabel} ${d[chosenX]}<br>${yLabel} ${d[chosenY]}%`);
+              }
+              else {
+            return (`${d.state}<br>${xLabel} ${d[chosenX]}%<br>${yLabel} ${d[chosenY]}%`);
+              }
           });
       
         circlesGroup.call(toolTip);
       
         circlesGroup.on("mouseover", function(data) {
-          toolTip.show(data, this);
+            d3.select(this).style("stroke", "black")
+            toolTip.show(data, this);
+
+            //console.log(this);
+
+            let currentCircle = this;
+
+            //console.log(currentCircle);
+            
+            textLabels.on("mouseover", function(data) {
+                d3.select(currentCircle).style("stroke", "black")
+                toolTip.show(data, this);
+            })
+
+                .on("mouseout", function(data, index) {
+                    d3.select(currentCircle).style("stroke", "white")
+                    toolTip.hide(data);
+            });
+
         })
           // onmouseout event
           .on("mouseout", function(data, index) {
+            d3.select(this).style("stroke", "white")
             toolTip.hide(data);
           });
 
@@ -186,6 +210,14 @@ function makeResponsive() {
             .attr("cx", d => xLinear(d[chosenX]))
             .attr("cy", d => yLinear(d[chosenY]))
             .attr("r", 10);
+            
+        circlesGroup
+            .on("mouseover", function(data) {
+                d3.select(this).style("stroke", "black");
+            })
+            .on("mouseout", function(data, index) {
+                d3.select(this).style("stroke", "white");
+            });
 
         // Add text to circles
         var circlesText = chartGroup.selectAll(".stateText")
@@ -197,7 +229,7 @@ function makeResponsive() {
         var textLabels = circlesText
             .attr("class", "stateText")
             .attr("x", d => xLinear(d[chosenX]))
-            .attr("y", d => yLinear(d[chosenY]) + 2)
+            .attr("y", d => yLinear(d[chosenY]) + 3)
             .text((d, i) => d.abbr)
             .attr("font-size", "10px");
 
@@ -255,7 +287,7 @@ function makeResponsive() {
             .text("Obese (%)");
 
         // Add tooltips
-        circlesGroup = updateToolTip(chosenX, chosenY, circlesGroup);
+        circlesGroup = updateToolTip(chosenX, chosenY, circlesGroup, textLabels);
 
         // Event listener for x labels    
         xLabelsGroup.selectAll("text")
@@ -278,7 +310,7 @@ function makeResponsive() {
                     circlesGroup = renderCircles(circlesGroup, textLabels, xLinear, chosenX, yLinear, chosenY);
 
                     // updates tooltips with new info
-                    circlesGroup = updateToolTip(chosenX, chosenY, circlesGroup);
+                    circlesGroup = updateToolTip(chosenX, chosenY, circlesGroup, textLabels);
 
                     //Change classes to highlight selection in bold
                     if (chosenX === "age") {
@@ -338,7 +370,7 @@ function makeResponsive() {
                     circlesGroup = renderCircles(circlesGroup, textLabels, xLinear, chosenX, yLinear, chosenY);
 
                     // updates tooltips with new info
-                    circlesGroup = updateToolTip(chosenX, chosenY, circlesGroup);
+                    circlesGroup = updateToolTip(chosenX, chosenY, circlesGroup, textLabels);
 
                     //Change classes to highlight selection in bold
                     if (chosenY === "smokes") {
